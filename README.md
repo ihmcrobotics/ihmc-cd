@@ -11,7 +11,7 @@ Gradle plugin for delivering and upgrading IHMC software.
 
 ```kotlin
 plugins {
-   id("us.ihmc.ihmc-build") version "0.15.6"
+   id("us.ihmc.ihmc-build") version "0.15.7"
    id("us.ihmc.ihmc-cd") version "0.0"
 }
 ```
