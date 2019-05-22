@@ -32,6 +32,11 @@ dependencies {
    compile("org.json:json:20180813")
    compile("com.github.rjeschke:txtmark:0.13")
    compile("org.jsoup:jsoup:1.12.1")
+   compile("com.squareup.okhttp3:okhttp:3.11.0")
+   compile("org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r")
+   compile("us.ihmc:encrypted-properties:0.1.0") {
+      exclude("org.slf4j", "slf4j-simple")
+   }
 }
 
 val pluginDisplayName = "IHMC CD"
