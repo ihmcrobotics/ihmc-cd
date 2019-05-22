@@ -26,8 +26,20 @@ class IHMCCDPlugin : Plugin<Project>
    {
       LogTools = project.logger
 
-      val release: (Task) -> Unit = { task ->
+      val upgrade: (Task) -> Unit = { task ->
+         task.doLast {
+            // build list of dependencies in this project
 
+            // search the web for upgrades
+
+            // actually replace the versions
+
+            // TODO use Git to commit and push the changes
+         }
+      }
+      project.tasks.register("upgrade", upgrade)
+
+      val release: (Task) -> Unit = { task ->
          task.doLast {
             // print current version
             LogTools.quiet("Version: {}", project.version)
@@ -41,10 +53,8 @@ class IHMCCDPlugin : Plugin<Project>
             // print current git branch name
             gitStuff(project)
          }
-
       }
       project.tasks.register("release", release)
-
    }
 
    private fun gitStuff(project: Project)
