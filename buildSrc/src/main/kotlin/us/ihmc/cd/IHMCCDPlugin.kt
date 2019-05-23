@@ -34,8 +34,8 @@ class IHMCCDPlugin : Plugin<Project>
             }
             val readText = buildFile.readText()
             val regex = Regex("([\"'][ \\t\\x0B]*us\\.ihmc[ \\t\\x0B\",]*" +
-                              "(?:name):[ \\t\\x0B\"]*)([0-9a-zA-Z-]{1,50}+)([ \\t\\x0B\",]*" +
-                              "(?:version):[ \\t\\x0B\"]*)([0-9\\.]+)([ \\t\\x0B]*[\"'])")
+                              "(?:name)??:[ \\t\\x0B\"]*)([0-9a-zA-Z-]{1,50}+)([ \\t\\x0B\",]*" +
+                              "(?:version)??:[ \\t\\x0B\"]*)([0-9\\.]+)([ \\t\\x0B]*[\"'])")
 
             val artifactNameIndex = 2;
             val versionGroupIndex = 4;
