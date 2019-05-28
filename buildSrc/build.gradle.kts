@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "us.ihmc"
-version = "0.0"
+version = "0.1"
 
 repositories {
    mavenCentral()
@@ -34,9 +34,6 @@ dependencies {
    compile("org.jsoup:jsoup:1.12.1")
    compile("com.squareup.okhttp3:okhttp:3.11.0")
    compile("org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r")
-   compile("us.ihmc:encrypted-properties:0.1.0") {
-      exclude("org.slf4j", "slf4j-simple")
-   }
 }
 
 val pluginDisplayName = "IHMC CD"
