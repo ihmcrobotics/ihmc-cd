@@ -1,17 +1,12 @@
 package us.ihmc.cd;
 
 import com.github.rjeschke.txtmark.Processor
-import okhttp3.Credentials
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.eclipse.jgit.api.Git
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.logging.Logger
-import org.json.JSONArray
-import org.json.JSONObject
 import org.jsoup.Jsoup
 
 lateinit var LogTools: Logger
@@ -38,46 +33,14 @@ class IHMCCDPlugin : Plugin<Project>
                buildFile = project.file("build.gradle")
             }
             val readText = buildFile.readText()
-            val regex = Regex("([\"'][ \\t\\x0B]*us\\.ihmc[ \\t\\x0B\"',]*" +
-                              "(?:name)??:[ \\t\\x0B\"']*)([0-9a-zA-Z-]{1,50}+)([ \\t\\x0B\"',]*" +
-                              "(?:version)??:[ \\t\\x0B\"']*)([0-9\\.]+)([ \\t\\x0B]*[\"'])")
 
-            val artifactNameIndex = 2;
-            val versionGroupIndex = 4;
 
-            var writeText = regex.replace(readText) { matchResult ->
-               var replacement = ""
-               for ((index, groupValue) in matchResult.groupValues.withIndex())
-               {
-                  if (index == 0) // avoid placing original in the replacement
-                  {
-                     continue
-                  }
+            var writeText = readText
 
-                  LogTools.trace(groupValue)
-                  if (index == versionGroupIndex)
-                  {
-                     val artifactName = matchResult.groupValues[artifactNameIndex]
-                     val latestVersion = queryBintray(artifactName).get("latest_version")
-                     if (latestVersion.equals(groupValue))
-                     {
-                        LogTools.quiet("[ihmc-cd] Up-to-date: $artifactName $groupValue -> $latestVersion")
-                     }
-                     else
-                     {
-                        LogTools.quiet("[ihmc-cd] Upgrading $artifactName $groupValue -> $latestVersion")
-                     }
-                     replacement += latestVersion
-                  }
-                  else
-                  {
-                     replacement += groupValue
-                  }
-               }
-               replacement
-            }
+            writeText = upgradePluginVersions(writeText)
+//            writeText = upgradeDependencyVersions(writeText)
 
-            buildFile.writeText(writeText)
+//            buildFile.writeText(writeText)
 
             // TODO use Git to commit and push the changes
          }
@@ -95,13 +58,93 @@ class IHMCCDPlugin : Plugin<Project>
             parseChangelog(project)
 
             // print is existing publication on Bintray
-            queryBintray(project.name)
+            queryLatestKnownDependencyVersion(project.name, project.version.toString())
 
             // print current git branch name
             gitStuff(project)
          }
       }
 //      project.tasks.register("release", release)
+   }
+
+   private fun upgradePluginVersions(originalText: String): String
+   {
+      val regex = Regex("us\\.ihmc\\.([0-9a-zA-Z-]{1,50}+)[\"'][ \\t\\x0B\\)version\"']+([0-9\\.]+)[\"']")
+      val artifactNameIndex = 1
+      val versionGroupIndex = 2
+      var replacedText = regex.replace(originalText) { matchResult ->
+         var replacement = ""
+         for ((index, groupValue) in matchResult.groupValues.withIndex())
+         {
+            if (index == 0) // avoid placing original in the replacement
+            {
+               continue
+            }
+
+            LogTools.quiet(groupValue)
+            if (index == versionGroupIndex)
+            {
+               val artifactName = matchResult.groupValues[artifactNameIndex]
+               val latestVersion = queryGradlePlugins(artifactName)
+               if (latestVersion.equals(groupValue))
+               {
+                  LogTools.quiet("[ihmc-cd] Up-to-date: $artifactName $groupValue -> $latestVersion")
+               }
+               else
+               {
+                  LogTools.quiet("[ihmc-cd] Upgrading $artifactName $groupValue -> $latestVersion")
+               }
+               replacement += latestVersion
+            }
+            else
+            {
+               replacement += groupValue
+            }
+         }
+         replacement
+      }
+      return replacedText
+   }
+
+   private fun upgradeDependencyVersions(originalText: String): String
+   {
+      val regex = Regex("([\"'][ \\t\\x0B]*us\\.ihmc[ \\t\\x0B\"',]*" +
+                        "(?:name)??:[ \\t\\x0B\"']*)([0-9a-zA-Z-]{1,50}+)([ \\t\\x0B\"',]*" +
+                        "(?:version)??:[ \\t\\x0B\"']*)([0-9\\.]+)([ \\t\\x0B]*[\"'])")
+      val artifactNameIndex = 2
+      val versionGroupIndex = 4
+      var replacedText = regex.replace(originalText) { matchResult ->
+         var replacement = ""
+         for ((index, groupValue) in matchResult.groupValues.withIndex())
+         {
+            if (index == 0) // avoid placing original in the replacement
+            {
+               continue
+            }
+
+            LogTools.trace(groupValue)
+            if (index == versionGroupIndex)
+            {
+               val artifactName = matchResult.groupValues[artifactNameIndex]
+               val latestVersion = queryLatestKnownDependencyVersion(artifactName, groupValue)
+               if (latestVersion.equals(groupValue))
+               {
+                  LogTools.quiet("[ihmc-cd] Up-to-date: $artifactName $groupValue -> $latestVersion")
+               }
+               else
+               {
+                  LogTools.quiet("[ihmc-cd] Upgrading $artifactName $groupValue -> $latestVersion")
+               }
+               replacement += latestVersion
+            }
+            else
+            {
+               replacement += groupValue
+            }
+         }
+         replacement
+      }
+      return replacedText
    }
 
    private fun checkBintrayCredentials(project: Project)
@@ -122,48 +165,18 @@ class IHMCCDPlugin : Plugin<Project>
       LogTools.quiet("Current branch: {}", git.repository.branch)
    }
 
-   private fun queryBintray(artifactName: String): JSONObject
+   private fun queryLatestKnownDependencyVersion(artifactName: String, originalVersion: String): String
    {
-      var exists = false
-      var choppedArtifactName = artifactName
-      var jsonBintray: JSONObject
-      do
+      val queryBintray = queryBintray(artifactName, bintrayUsername, bintrayApiKey)
+
+      if (queryBintray != null)
       {
-         val requestBintray = Request.Builder()
-               .url("https://api.bintray.com/packages/ihmcrobotics/maven-release/$choppedArtifactName")
-               .header("Authorization", Credentials.basic(bintrayUsername, bintrayApiKey))
-               .build()
-         val client = OkHttpClient()
-         val responseBintray = client.newCall(requestBintray).execute()
-         val body = responseBintray.body()!!
-         val dataBintray = body.string()
-         jsonBintray = JSONObject(dataBintray)
-         LogTools.trace("Bintray data: {}", jsonBintray.toString(3))
-         if (jsonBintray.has("message") && jsonBintray.get("message").toString().contains("was not found"))
-         {
-            if (choppedArtifactName.contains("-"))
-            {
-               choppedArtifactName = choppedArtifactName.substringBeforeLast("-")
-            }
-            else
-            {
-               throw GradleException("Artifact could not be found on Bintray: $artifactName")
-            }
-         }
-         else
-         {
-            exists = true
-         }
+         return queryBintray.get("latest_version").toString()
       }
-      while (!exists)
-
-      val versions = jsonBintray.get("versions") as JSONArray
-
-      versions.forEach {
-         LogTools.trace("Bintray version: {}", it)
+      else
+      {
+         return originalVersion
       }
-
-      return jsonBintray
    }
 
    private fun parseChangelog(project: Project)
