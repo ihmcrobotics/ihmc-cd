@@ -1,9 +1,9 @@
 import com.gradle.publish.MavenCoordinates
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompile
 
 plugins {
-   kotlin("jvm") version "1.3.20"
+   `kotlin-dsl`
    `java-gradle-plugin`
+   `maven-publish`
    id("com.gradle.plugin-publish") version "0.10.0"
 }
 
@@ -18,16 +18,7 @@ repositories {
    }
 }
 
-java.sourceCompatibility = JavaVersion.VERSION_1_8
-java.targetCompatibility = JavaVersion.VERSION_1_8
-
-tasks.withType<KotlinJvmCompile> {
-   kotlinOptions.jvmTarget = "1.8"
-}
-
 dependencies {
-   compile(gradleKotlinDsl())
-   compile(kotlin("stdlib-jdk8", "1.3.20"))
    compile("com.github.kittinunf.fuel:fuel:2.0.1")
    compile("org.json:json:20180813")
    compile("com.github.rjeschke:txtmark:0.13")
