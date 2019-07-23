@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin
 
 plugins {
-   id("us.ihmc.ihmc-build") version "0.16.3"
+   id("us.ihmc.ihmc-build") version "0.16.5"
    id("us.ihmc.ihmc-ci") version "4.23"
    id("us.ihmc.ihmc-cd")
    id("us.ihmc.log-tools") version "0.3.1"
