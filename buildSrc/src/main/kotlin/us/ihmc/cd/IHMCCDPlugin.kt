@@ -106,13 +106,13 @@ class IHMCCDPlugin : Plugin<Project>
 
    private fun checkBintrayCredentials(project: Project)
    {
-      project.properties["bintray_user"].run {
+      project.properties["bintrayUsername"].run {
          if (this != null) bintrayUsername = this as String
-         else throw GradleException("Please set bintray_user in ~/.gradle/gradle.properties")
+         else throw GradleException("Please set bintrayUsername in ~/.gradle/gradle.properties")
       }
-      project.properties["bintray_key"].run {
+      project.properties["bintrayApiKey"].run {
          if (this != null) bintrayApiKey = this as String
-         else throw GradleException("Please set bintray_key in ~/.gradle/gradle.properties")
+         else throw GradleException("Please set bintrayApiKey in ~/.gradle/gradle.properties")
       }
    }
 
