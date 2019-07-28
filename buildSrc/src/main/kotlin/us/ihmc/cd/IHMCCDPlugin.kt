@@ -16,77 +16,22 @@ import org.jsoup.Jsoup
 
 lateinit var LogTools: Logger
 
+data class ApiKey(var username: String = "", var apiKey: String = "")
+
 class IHMCCDPlugin : Plugin<Project>
 {
    lateinit var project: Project
-   var bintrayUsername: String = "unset"
-   var bintrayApiKey: String = "unset"
 
    override fun apply(project: Project)
    {
       this.project = project
       LogTools = project.logger
 
-      val upgrade: (Task) -> Unit = { task ->
-         task.doLast {
-            checkBintrayCredentials(project)
-
-            // build list of dependencies in this project
-            var buildFile = project.file("build.gradle.kts")
-            if (!buildFile.exists())
-            {
-               buildFile = project.file("build.gradle")
-            }
-            val readText = buildFile.readText()
-            val regex = Regex("([\"'][ \\t\\x0B]*us\\.ihmc[ \\t\\x0B\"',]*" +
-                              "(?:name)??:[ \\t\\x0B\"']*)([0-9a-zA-Z-]{1,50}+)([ \\t\\x0B\"',]*" +
-                              "(?:version)??:[ \\t\\x0B\"']*)([0-9\\.]+)([ \\t\\x0B]*[\"'])")
-
-            val artifactNameIndex = 2;
-            val versionGroupIndex = 4;
-
-            var writeText = regex.replace(readText) { matchResult ->
-               var replacement = ""
-               for ((index, groupValue) in matchResult.groupValues.withIndex())
-               {
-                  if (index == 0) // avoid placing original in the replacement
-                  {
-                     continue
-                  }
-
-                  LogTools.trace(groupValue)
-                  if (index == versionGroupIndex)
-                  {
-                     val artifactName = matchResult.groupValues[artifactNameIndex]
-                     val latestVersion = queryBintray(artifactName).get("latest_version")
-                     if (latestVersion.equals(groupValue))
-                     {
-                        LogTools.quiet("[ihmc-cd] Up-to-date: $artifactName $groupValue -> $latestVersion")
-                     }
-                     else
-                     {
-                        LogTools.quiet("[ihmc-cd] Upgrading $artifactName $groupValue -> $latestVersion")
-                     }
-                     replacement += latestVersion
-                  }
-                  else
-                  {
-                     replacement += groupValue
-                  }
-               }
-               replacement
-            }
-
-            buildFile.writeText(writeText)
-
-            // TODO use Git to commit and push the changes
-         }
-      }
-      project.tasks.register("upgrade", upgrade)
+      project.tasks.register("upgrade", UpgradeTask.configureUpgradeTask())
 
       val release: (Task) -> Unit = { task ->
          task.doLast {
-            checkBintrayCredentials(project)
+            val bintrayApiKey = checkBintrayCredentials(project)
 
             // print current version
             LogTools.quiet("Version: {}", project.version)
@@ -95,7 +40,7 @@ class IHMCCDPlugin : Plugin<Project>
             parseChangelog(project)
 
             // print is existing publication on Bintray
-            queryBintray(project.name)
+            queryBintray(project.name, bintrayApiKey)
 
             // print current git branch name
             gitStuff(project)
@@ -104,66 +49,10 @@ class IHMCCDPlugin : Plugin<Project>
 //      project.tasks.register("release", release)
    }
 
-   private fun checkBintrayCredentials(project: Project)
-   {
-      project.properties["bintrayUsername"].run {
-         if (this != null) bintrayUsername = this as String
-         else throw GradleException("Please set bintrayUsername in ~/.gradle/gradle.properties")
-      }
-      project.properties["bintrayApiKey"].run {
-         if (this != null) bintrayApiKey = this as String
-         else throw GradleException("Please set bintrayApiKey in ~/.gradle/gradle.properties")
-      }
-   }
-
    private fun gitStuff(project: Project)
    {
       val git = Git.open(project.projectDir)
       LogTools.quiet("Current branch: {}", git.repository.branch)
-   }
-
-   private fun queryBintray(artifactName: String): JSONObject
-   {
-      var exists = false
-      var choppedArtifactName = artifactName
-      var jsonBintray: JSONObject
-      do
-      {
-         val requestBintray = Request.Builder()
-               .url("https://api.bintray.com/packages/ihmcrobotics/maven-release/$choppedArtifactName")
-               .header("Authorization", Credentials.basic(bintrayUsername, bintrayApiKey))
-               .build()
-         val client = OkHttpClient()
-         val responseBintray = client.newCall(requestBintray).execute()
-         val body = responseBintray.body()!!
-         val dataBintray = body.string()
-         jsonBintray = JSONObject(dataBintray)
-         LogTools.trace("Bintray data: {}", jsonBintray.toString(3))
-         if (jsonBintray.has("message") && jsonBintray.get("message").toString().contains("was not found"))
-         {
-            if (choppedArtifactName.contains("-"))
-            {
-               choppedArtifactName = choppedArtifactName.substringBeforeLast("-")
-            }
-            else
-            {
-               throw GradleException("Artifact could not be found on Bintray: $artifactName")
-            }
-         }
-         else
-         {
-            exists = true
-         }
-      }
-      while (!exists)
-
-      val versions = jsonBintray.get("versions") as JSONArray
-
-      versions.forEach {
-         LogTools.trace("Bintray version: {}", it)
-      }
-
-      return jsonBintray
    }
 
    private fun parseChangelog(project: Project)
@@ -185,4 +74,62 @@ class IHMCCDPlugin : Plugin<Project>
          LogTools.quiet(it.toString())
       }
    }
+}
+
+fun queryBintray(artifactName: String, apiKey: ApiKey): JSONObject
+{
+   var exists = false
+   var choppedArtifactName = artifactName
+   var jsonBintray: JSONObject
+   do
+   {
+      val requestBintray = Request.Builder()
+            .url("https://api.bintray.com/packages/ihmcrobotics/maven-release/$choppedArtifactName")
+            .header("Authorization", Credentials.basic(apiKey.username, apiKey.apiKey))
+            .build()
+      val client = OkHttpClient()
+      val responseBintray = client.newCall(requestBintray).execute()
+      val body = responseBintray.body()!!
+      val dataBintray = body.string()
+      jsonBintray = JSONObject(dataBintray)
+      LogTools.trace("Bintray data: {}", jsonBintray.toString(3))
+      if (jsonBintray.has("message") && jsonBintray.get("message").toString().contains("was not found"))
+      {
+         if (choppedArtifactName.contains("-"))
+         {
+            choppedArtifactName = choppedArtifactName.substringBeforeLast("-")
+         }
+         else
+         {
+            throw GradleException("Artifact could not be found on Bintray: $artifactName")
+         }
+      }
+      else
+      {
+         exists = true
+      }
+   }
+   while (!exists)
+
+   val versions = jsonBintray.get("versions") as JSONArray
+
+   versions.forEach {
+      LogTools.trace("Bintray version: {}", it)
+   }
+
+   return jsonBintray
+}
+
+fun checkBintrayCredentials(project: Project): ApiKey
+{
+   val bintrayApiKey = ApiKey()
+   project.properties["bintrayUsername"].run {
+      if (this != null) bintrayApiKey.username = this as String
+      else throw GradleException("Please set bintrayUsername in ~/.gradle/gradle.properties")
+   }
+   project.properties["bintrayApiKey"].run {
+      if (this != null) bintrayApiKey.apiKey = this as String
+      else throw GradleException("Please set bintrayApiKey in ~/.gradle/gradle.properties")
+   }
+   return bintrayApiKey
 }
