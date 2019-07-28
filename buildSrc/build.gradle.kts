@@ -25,6 +25,7 @@ dependencies {
    compile("org.jsoup:jsoup:1.12.1")
    compile("com.squareup.okhttp3:okhttp:3.11.0")
    compile("org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r")
+   compile("com.hierynomus:sshj:0.27.0")
 }
 
 val pluginDisplayName = "IHMC CD"
