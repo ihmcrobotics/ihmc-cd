@@ -12,6 +12,10 @@ class IHMCCDPlugin : Plugin<Project>
       this.project = project
       LogTools = project.logger
 
+      // add SFTP extension
+      project.extensions.add("sftp", SFTPExtension())
+      // add deploy task
+
       project.tasks.register("upgrade", UpgradeTask.configureUpgradeTask())
       project.tasks.register("release", ReleaseTask.configureReleaseTask())
    }
