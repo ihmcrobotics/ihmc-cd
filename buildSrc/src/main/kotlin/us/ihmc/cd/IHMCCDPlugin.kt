@@ -13,7 +13,7 @@ class IHMCCDPlugin : Plugin<Project>
       LogTools = project.logger
 
       // add SFTP extension
-      project.extensions.add("sftp", SFTPExtension())
+      project.extensions.add("remote", RemoteExtension())
       // add deploy task
 
       project.tasks.register("upgrade", UpgradeTask.configureUpgradeTask())

@@ -1,15 +1,9 @@
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin
-
 plugins {
    id("us.ihmc.ihmc-build") version "0.16.6"
    id("us.ihmc.ihmc-ci") version "4.23"
    id("us.ihmc.ihmc-cd")
    id("us.ihmc.log-tools") version "0.3.1"
    kotlin("jvm") version "1.3.20"
-}
-
-subprojects {
-   this.apply<KotlinPlatformJvmPlugin>()
 }
 
 ihmc {
@@ -21,4 +15,16 @@ ihmc {
 
    configureDependencyResolution()
    configurePublications()
+}
+
+tasks.create("deploy") {
+   doLast {
+      remote.session("host", "username") {
+         sftp.get("/home/remoteusr/testDir2", "/home/localusr/testDir2")
+         sftp.put("/home/localusr/test2.txt", "/home/remoteusr/test2.txt")
+
+         exec("cp /home/remoteusr/test2.txt /home/remoteusr/test3.txt")
+         exec("echo hello")
+      }
+   }
 }
