@@ -7,6 +7,8 @@ import net.schmizz.sshj.sftp.SFTPClient
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
 import org.gradle.api.Action
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 open class RemoteExtension
@@ -18,7 +20,34 @@ open class RemoteExtension
 
    fun session(address: String, username: String, action: Action<RemoteConnection>)
    {
-      session(address, {sshClient -> sshClient.authPublickey(username)} , action)
+      session(address, {sshClient -> authWithSSHKey(username, sshClient)} , action)
+   }
+
+   /**
+    * Replicate OpenSSH functionality where users can name private keys whatever they want.
+    */
+   private fun authWithSSHKey(username: String, sshClient: SSHClient)
+   {
+      val userSSHConfigFolder = Paths.get(System.getProperty("user.home")).resolve(".ssh")
+
+      val list = Files.list(userSSHConfigFolder)
+
+      val privateKeyFiles = arrayListOf<String>()
+      for (path in list)
+      {
+         if (Files.isRegularFile(path)
+               && path.fileName.toString() != "config"
+               && path.fileName.toString() != "known_hosts"
+               && !path.fileName.toString().endsWith(".pub"))
+         {
+            val absoluteNormalizedString = path.toAbsolutePath().normalize().toString()
+            privateKeyFiles.add(absoluteNormalizedString)
+         }
+      }
+
+      LogTools.quiet("DEBUG: Passing keys to authPublicKey: {}", privateKeyFiles)
+
+      sshClient.authPublickey(username, *privateKeyFiles.toTypedArray())
    }
 
    class RemoteConnection(val ssh: SSHClient, val sftp: SFTPClient)
@@ -51,9 +80,21 @@ open class RemoteExtension
             }
          }
       }
+
+      fun put(source: String, dest: String)
+      {
+         LogTools.quiet("Putting $source to ${ssh.remoteHostname}:$dest")
+         sftp.put(source, dest)
+      }
+
+      fun get(source: String, dest: String)
+      {
+         LogTools.quiet("Getting ${ssh.remoteHostname}:$source to $dest")
+         sftp.get(source, dest)
+      }
    }
 
-   private fun session(address: String, authenticate: (SSHClient) -> Unit, action: Action<RemoteConnection>)
+   fun session(address: String, authenticate: (SSHClient) -> Unit, action: Action<RemoteConnection>)
    {
       val sshClient = SSHClient()
       sshClient.loadKnownHosts()
