@@ -45,7 +45,7 @@ open class RemoteExtension
          }
       }
 
-      LogTools.quiet("DEBUG: Passing keys to authPublicKey: {}", privateKeyFiles)
+      LogTools.info("Passing keys to authPublicKey: {}", privateKeyFiles)
 
       sshClient.authPublickey(username, *privateKeyFiles.toTypedArray())
    }
