@@ -60,10 +60,10 @@ open class RemoteExtension
             session = ssh.startSession()
 
             LogTools.quiet("Executing on ${ssh.remoteHostname}: \"$command\"")
-            val command = session.exec(command)
-            LogTools.quiet(IOUtils.readFully(command.inputStream).toString())
-            command.join((timeout * 1e9).toLong(), TimeUnit.NANOSECONDS)
-            LogTools.quiet("** exit status: " + command.exitStatus)
+            val sshjCommand = session.exec(command)
+            LogTools.quiet(IOUtils.readFully(sshjCommand.inputStream).toString())
+            sshjCommand.join((timeout * 1e9).toLong(), TimeUnit.NANOSECONDS)
+            LogTools.quiet("** exit status: " + sshjCommand.exitStatus)
          }
          finally
          {
