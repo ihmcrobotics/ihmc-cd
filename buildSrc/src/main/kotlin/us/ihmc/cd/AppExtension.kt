@@ -27,7 +27,7 @@ class AppExtension(val project: Project)
 
    fun entrypoint(applicationName: String, mainClassName: String, defaultJvmOpts: Iterable<String>? = null)
    {
-      val entrypoint by project.tasks.creating(CreateStartScripts::class.java) {
+      val entrypoint = project.tasks.create(mainClassName.substringAfterLast(".").decapitalize(), CreateStartScripts::class.java) {
          this.mainClassName = mainClassName
          this.applicationName = applicationName
          if (defaultJvmOpts != null)
