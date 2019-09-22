@@ -3,7 +3,7 @@ plugins {
    id("us.ihmc.ihmc-ci") version "4.23"
    id("us.ihmc.ihmc-cd")
    id("us.ihmc.log-tools") version "0.3.1"
-   kotlin("jvm") version "1.3.20"
+   kotlin("jvm") version "1.3.41"
 }
 
 ihmc {
