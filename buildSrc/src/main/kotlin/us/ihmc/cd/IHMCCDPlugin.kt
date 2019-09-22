@@ -2,6 +2,7 @@ package us.ihmc.cd;
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.ApplicationPlugin
 
 class IHMCCDPlugin : Plugin<Project>
 {
@@ -12,9 +13,10 @@ class IHMCCDPlugin : Plugin<Project>
       this.project = project
       LogTools = project.logger
 
+      // add deploy task
+      project.extensions.add("app", AppExtension(project))
       // add SFTP extension
       project.extensions.add("remote", RemoteExtension())
-      // add deploy task
 
       project.tasks.register("upgrade", UpgradeTask.configureUpgradeTask())
       project.tasks.register("release", ReleaseTask.configureReleaseTask())
