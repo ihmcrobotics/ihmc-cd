@@ -1,7 +1,7 @@
 plugins {
    kotlin("jvm") version "1.3.41"
    id("us.ihmc.ihmc-build") version "0.19.5"
-   id("us.ihmc.ihmc-ci") version "4.23"
+   id("us.ihmc.ihmc-ci") version "5.0"
    id("us.ihmc.ihmc-cd")
    id("us.ihmc.log-tools") version "0.3.1"
 }
