@@ -15,7 +15,7 @@ open class RemoteExtension
 {
    fun session(address: String, username: String, password: String, action: Action<RemoteConnection>)
    {
-      session(address, {sshClient -> sshClient.authPublickey(username, password)} , action)
+      session(address, {sshClient -> sshClient.authPassword(username, password)} , action)
    }
 
    fun session(address: String, username: String, action: Action<RemoteConnection>)
