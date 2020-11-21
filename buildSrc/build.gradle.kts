@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "us.ihmc"
-version = "1.15"
+version = "1.16"
 
 repositories {
    mavenCentral()
@@ -19,13 +19,13 @@ repositories {
 }
 
 dependencies {
-   compile("com.github.kittinunf.fuel:fuel:2.0.1")
-   compile("org.json:json:20180813")
-   compile("com.github.rjeschke:txtmark:0.13")
-   compile("org.jsoup:jsoup:1.12.1")
-   compile("com.squareup.okhttp3:okhttp:3.11.0")
-   compile("org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r")
-   compile("com.hierynomus:sshj:0.27.0")
+   api("com.github.kittinunf.fuel:fuel:2.3.0")
+   api("org.json:json:20201115")
+   api("com.github.rjeschke:txtmark:0.13")
+   api("org.jsoup:jsoup:1.13.1")
+   api("com.squareup.okhttp3:okhttp:4.9.0")
+   api("org.eclipse.jgit:org.eclipse.jgit:5.9.0.202009080501-r")
+   api("com.hierynomus:sshj:0.30.0")
 }
 
 val pluginDisplayName = "IHMC CD"

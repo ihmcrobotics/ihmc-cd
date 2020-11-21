@@ -54,9 +54,7 @@ fun queryBintray(artifactName: String, apiKey: ApiKey): JSONObject
             .header("Authorization", Credentials.basic(apiKey.username, apiKey.apiKey))
             .build()
       val client = OkHttpClient()
-      val responseBintray = client.newCall(requestBintray).execute()
-      val body = responseBintray.body()!!
-      val dataBintray = body.string()
+      val dataBintray = client.newCall(requestBintray).execute().use { it.body?.string() }
       jsonBintray = JSONObject(dataBintray)
       LogTools.trace("Bintray data: {}", jsonBintray.toString(3))
       if (jsonBintray.has("message") && jsonBintray.get("message").toString().contains("was not found"))
