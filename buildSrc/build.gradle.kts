@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-   api("com.github.kittinunf.fuel:fuel:2.3.0")
+   api("com.github.kittinunf.fuel:fuel:2.2.3")
    api("org.json:json:20201115")
    api("com.github.rjeschke:txtmark:0.13")
    api("org.jsoup:jsoup:1.13.1")
