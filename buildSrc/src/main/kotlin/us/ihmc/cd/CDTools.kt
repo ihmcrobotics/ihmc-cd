@@ -51,7 +51,7 @@ fun queryMavenCentral(artifactName: String): String
    val client = OkHttpClient()
    val dataBintray = client.newCall(requestMavenCentral).execute().use { it.body?.string() }
    jsonMavenCentral = JSONObject(dataBintray)
-   LogTools.quiet("Maven Central data: {}", jsonMavenCentral.toString(3))
+   LogTools.trace("Maven Central data: {}", jsonMavenCentral.toString(3))
    if (jsonMavenCentral.getJSONObject("response").getInt("numFound") == 0)
    {
       throw GradleException("Artifact could not be found on Maven Central: $artifactName")
@@ -59,7 +59,7 @@ fun queryMavenCentral(artifactName: String): String
 
    val versions = jsonMavenCentral.getJSONObject("response").getJSONArray("docs")
    versions.forEach {
-      LogTools.quiet("Maven Central version: {}", (it as JSONObject).get("v"))
+      LogTools.trace("Maven Central version: {}", (it as JSONObject).get("v"))
    }
 
    var latestVersion = SemanticVersionNumber((versions[0] as JSONObject).getString("v"))
