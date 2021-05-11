@@ -28,3 +28,7 @@ tasks.create("deploy") {
       }
    }
 }
+
+// Add an IHMC dependency and run 'gradle upgrade' to test
+mainDependencies {
+}

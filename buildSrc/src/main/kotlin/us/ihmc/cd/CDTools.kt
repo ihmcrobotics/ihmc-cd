@@ -1,7 +1,6 @@
 package us.ihmc.cd
 
 import com.github.rjeschke.txtmark.Processor
-import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.eclipse.jgit.api.Git
@@ -13,8 +12,6 @@ import org.json.JSONObject
 import org.jsoup.Jsoup
 
 lateinit var LogTools: Logger
-
-data class ApiKey(var username: String = "", var apiKey: String = "")
 
 fun gitStuff(project: Project)
 {
@@ -42,58 +39,37 @@ fun parseChangelog(project: Project)
    }
 }
 
-fun queryBintray(artifactName: String, apiKey: ApiKey): JSONObject
+fun queryMavenCentral(artifactName: String): String
 {
-   var exists = false
-   var choppedArtifactName = artifactName
-   var jsonBintray: JSONObject
-   do
+   var jsonMavenCentral: JSONObject
+   val baseUrl = "https://search.maven.org/solrsearch/select"
+   val part1 = "?q=g:%22us.ihmc%22+AND+a:%22"
+   val part2 = "%22&rows=20&core=gav"
+   val requestMavenCentral = Request.Builder()
+         .url("$baseUrl$part1$artifactName$part2")
+         .build()
+   val client = OkHttpClient()
+   val dataBintray = client.newCall(requestMavenCentral).execute().use { it.body?.string() }
+   jsonMavenCentral = JSONObject(dataBintray)
+   LogTools.quiet("Maven Central data: {}", jsonMavenCentral.toString(3))
+   if (jsonMavenCentral.getJSONObject("response").getInt("numFound") == 0)
    {
-      val requestBintray = Request.Builder()
-            .url("https://api.bintray.com/packages/ihmcrobotics/maven-release/$choppedArtifactName")
-            .header("Authorization", Credentials.basic(apiKey.username, apiKey.apiKey))
-            .build()
-      val client = OkHttpClient()
-      val dataBintray = client.newCall(requestBintray).execute().use { it.body?.string() }
-      jsonBintray = JSONObject(dataBintray)
-      LogTools.trace("Bintray data: {}", jsonBintray.toString(3))
-      if (jsonBintray.has("message") && jsonBintray.get("message").toString().contains("was not found"))
-      {
-         if (choppedArtifactName.contains("-"))
-         {
-            choppedArtifactName = choppedArtifactName.substringBeforeLast("-")
-         }
-         else
-         {
-            throw GradleException("Artifact could not be found on Bintray: $artifactName")
-         }
-      }
-      else
-      {
-         exists = true
-      }
+      throw GradleException("Artifact could not be found on Maven Central: $artifactName")
    }
-   while (!exists)
 
-   val versions = jsonBintray.get("versions") as JSONArray
-
+   val versions = jsonMavenCentral.getJSONObject("response").getJSONArray("docs")
    versions.forEach {
-      LogTools.trace("Bintray version: {}", it)
+      LogTools.quiet("Maven Central version: {}", (it as JSONObject).get("v"))
    }
 
-   return jsonBintray
-}
+   var latestVersion = SemanticVersionNumber((versions[0] as JSONObject).getString("v"))
+   versions.forEach {
+      val version = SemanticVersionNumber((it as JSONObject).getString("v"))
+      if (version.compareTo(latestVersion) > 0)
+      {
+         latestVersion = version
+      }
+   }
 
-fun checkBintrayCredentials(project: Project): ApiKey
-{
-   val bintrayApiKey = ApiKey()
-   project.properties["bintrayUsername"].run {
-      if (this != null) bintrayApiKey.username = this as String
-      else throw GradleException("Please set bintrayUsername in ~/.gradle/gradle.properties")
-   }
-   project.properties["bintrayApiKey"].run {
-      if (this != null) bintrayApiKey.apiKey = this as String
-      else throw GradleException("Please set bintrayApiKey in ~/.gradle/gradle.properties")
-   }
-   return bintrayApiKey
+   return latestVersion.get()
 }

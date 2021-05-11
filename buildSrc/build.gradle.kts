@@ -8,14 +8,11 @@ plugins {
 }
 
 group = "us.ihmc"
-version = "1.17"
+version = "1.19"
 
 repositories {
    mavenCentral()
    jcenter()
-   maven{
-      url = uri("https://dl.bintray.com/ihmcrobotics/maven-release")
-   }
 }
 
 dependencies {

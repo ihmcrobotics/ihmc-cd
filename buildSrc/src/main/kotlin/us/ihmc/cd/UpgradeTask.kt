@@ -8,8 +8,6 @@ object UpgradeTask
    {
       return { task ->
          task.doLast {
-            val bintrayApiKey = checkBintrayCredentials(project)
-
             // build list of dependencies in this project
             var buildFile = project.file("build.gradle.kts")
             if (!buildFile.exists())
@@ -18,7 +16,7 @@ object UpgradeTask
             }
             val readText = buildFile.readText()
 
-            var writeText = upgradeDependencies(readText, bintrayApiKey)
+            var writeText = upgradeDependencies(readText)
 
             val pluginRegex = Regex("([\"'][ \\t\\x0B]*us\\.ihmc[ \\t\\x0B\"',]*" +
                                     "(?:name)??:[ \\t\\x0B\"']*)([0-9a-zA-Z-]{1,50}+)([ \\t\\x0B\"',]*" +
@@ -33,7 +31,7 @@ object UpgradeTask
       }
    }
 
-   private fun upgradeDependencies(readText: String, bintrayApiKey: ApiKey): String
+   private fun upgradeDependencies(readText: String): String
    {
       val regex = Regex("([\"'][ \\t\\x0B]*us\\.ihmc[ \\t\\x0B\"',]*" +
                               "(?:name)??:[ \\t\\x0B\"']*)([0-9a-zA-Z-]{1,50}+)([ \\t\\x0B\"',]*" +
@@ -57,7 +55,7 @@ object UpgradeTask
                try
                {
                   val artifactName = matchResult.groupValues[artifactNameIndex]
-                  val latestVersion = queryBintray(artifactName, bintrayApiKey).get("latest_version").toString()
+                  val latestVersion = queryMavenCentral(artifactName)
                   when
                   {
                      latestVersion == groupValue                                              ->
