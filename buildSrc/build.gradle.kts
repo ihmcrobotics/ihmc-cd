@@ -8,11 +8,13 @@ plugins {
 }
 
 group = "us.ihmc"
-version = "1.20"
+version = "1.21"
 
 repositories {
    mavenCentral()
-   jcenter()
+   maven {
+      url = uri("https://jitpack.io")
+   }
 }
 
 dependencies {
