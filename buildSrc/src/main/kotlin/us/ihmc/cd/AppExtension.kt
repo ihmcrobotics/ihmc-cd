@@ -1,6 +1,7 @@
 package us.ihmc.cd
 
 import org.gradle.api.Project
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.plugins.JavaApplication
 import org.gradle.api.tasks.application.CreateStartScripts
@@ -10,14 +11,16 @@ import java.io.File
 
 class AppExtension(val project: Project)
 {
-   val javaApplication: JavaApplication
+   val javaApplicationMap = hashMapOf<Project, JavaApplication>()
 
    init
    {
-      project.pluginManager.apply(ApplicationPlugin::class.java)
-      javaApplication = project.extensions.getByType(JavaApplication::class.java)
-
-      javaApplication.mainClassName = "" // allow for multiple app configuration
+      project.allprojects {
+         pluginManager.apply(ApplicationPlugin::class.java)
+         val javaApplication = extensions.getByType(JavaApplication::class.java)
+         javaApplicationMap.put(this, javaApplication)
+         javaApplication.mainClass.set("") // make user experience so N start scripts is natural
+      }
    }
 
    fun entrypoint(applicationName: String, mainClassName: String)
@@ -27,8 +30,13 @@ class AppExtension(val project: Project)
 
    fun entrypoint(applicationName: String, mainClassName: String, defaultJvmOpts: Iterable<String>? = null)
    {
+      entrypoint(project, applicationName, mainClassName, defaultJvmOpts)
+   }
+
+   fun entrypoint(project: Project, applicationName: String, mainClassName: String, defaultJvmOpts: Iterable<String>? = null)
+   {
       val entrypoint = project.tasks.create(applicationName.decapitalize(), CreateStartScripts::class.java) {
-         this.mainClassName = mainClassName
+         this.mainClass.set(mainClassName)
          this.applicationName = applicationName
          if (defaultJvmOpts != null)
          {
@@ -37,8 +45,9 @@ class AppExtension(val project: Project)
          this.outputDir = File(project.buildDir, "scripts")
          this.classpath = project.tasks.getByName<Jar>("jar").outputs.files + project.configurations.getByName("default")
       }
-      javaApplication.applicationDistribution.into("bin") {
+      javaApplicationMap[project]!!.applicationDistribution.into("bin") {
          from(entrypoint)
+         duplicatesStrategy = DuplicatesStrategy.INCLUDE
       }
    }
 }

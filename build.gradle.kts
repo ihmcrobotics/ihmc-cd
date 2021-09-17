@@ -17,6 +17,9 @@ ihmc {
    configurePublications()
 }
 
+app.entrypoint("MainEntrypoint", "us.ihmc.cd.MainClass")
+app.entrypoint(ihmc.sourceSetProject("test"), "TestEntrypoint", "us.ihmc.cd.TestClass")
+
 tasks.create("deploy") {
    doLast {
       remote.session("host", "username") {
