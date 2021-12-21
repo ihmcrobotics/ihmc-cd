@@ -23,7 +23,7 @@ dependencies {
    api("com.github.rjeschke:txtmark:0.13")
    api("org.jsoup:jsoup:1.14.3")
    api("com.squareup.okhttp3:okhttp:4.9.3")
-   api("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
+   api("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r") // newer versions not compatible with Java 8
    api("com.hierynomus:sshj:0.32.0")
 }
 
