@@ -7,7 +7,6 @@ import org.eclipse.jgit.api.Git
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
-import org.json.JSONArray
 import org.json.JSONObject
 import org.jsoup.Jsoup
 

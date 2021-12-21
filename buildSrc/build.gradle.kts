@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "us.ihmc"
-version = "1.22"
+version = "1.23"
 
 repositories {
    mavenCentral()
@@ -23,7 +23,7 @@ dependencies {
    api("com.github.rjeschke:txtmark:0.13")
    api("org.jsoup:jsoup:1.14.3")
    api("com.squareup.okhttp3:okhttp:4.9.3")
-   api("org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r")
+   api("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
    api("com.hierynomus:sshj:0.32.0")
 }
 
