@@ -43,7 +43,7 @@ class AppExtension(val project: Project)
             this.defaultJvmOpts = defaultJvmOpts
          }
          this.outputDir = File(project.buildDir, "scripts")
-         this.classpath = project.tasks.getByName<Jar>("jar").outputs.files + project.configurations.getByName("default")
+         this.classpath = project.tasks.getByName<Jar>("jar").outputs.files + project.configurations.getByName("runtimeClasspath")
       }
       javaApplicationMap[project]!!.applicationDistribution.into("bin") {
          from(entrypoint)
