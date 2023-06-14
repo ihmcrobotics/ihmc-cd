@@ -13,7 +13,7 @@ Relies on the conventions at https://keepachangelog.com/en/1.0.0/
 
 ```kotlin
 plugins {
-   id("us.ihmc.ihmc-build") version "0.28.8"
+   id("us.ihmc.ihmc-build") version "0.29.3"
    id("us.ihmc.ihmc-cd") version "0.0"
 }
 ```
