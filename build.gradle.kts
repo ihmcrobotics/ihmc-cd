@@ -1,5 +1,5 @@
 plugins {
-   kotlin("jvm") version "1.5.31"
+   kotlin("jvm") version "1.9.0"
    id("us.ihmc.ihmc-build")
    id("us.ihmc.ihmc-ci") version "7.7"
    id("us.ihmc.ihmc-cd")
