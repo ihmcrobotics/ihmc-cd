@@ -97,8 +97,8 @@ open class RemoteExtension
    fun session(address: String, authenticate: (SSHClient) -> Unit, action: Action<RemoteConnection>)
    {
       val sshClient = SSHClient()
+      sshClient.addHostKeyVerifier(PromiscuousVerifier())
       sshClient.loadKnownHosts()
-      sshClient.addHostKeyVerifier(PromiscuousVerifier()) // TODO: Try removing this again
       sshClient.connect(address)
 
       try
