@@ -1,4 +1,5 @@
 # IHMC CD
+# Functionality now included in [ihmc-build](https://github.com/ihmcrobotics/ihmc-build)
 
 Gradle plugin for delivering and upgrading IHMC software.
 
